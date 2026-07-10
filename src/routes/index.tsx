@@ -12,12 +12,13 @@ type ScreenId =
   | "history";
 
 type Species = "Yellowfin" | "Skipjack";
+type Grade = "A" | "B" | "C" | "Reject";
 
 type Session = {
   species: Species;
   weight: number;
   price: number | null;
-  grade: "A" | "B" | "C" | null;
+  grade: Grade | null;
   conf: number | null;
   time: string;
 };
@@ -57,7 +58,7 @@ function TunEye() {
   const [price, setPrice] = useState<number>(280);
   const [date, setDate] = useState<string>(todayStr());
   const [weight, setWeight] = useState<number | null>(null);
-  const [grade, setGrade] = useState<"A" | "B" | "C" | null>(null);
+  const [grade, setGrade] = useState<Grade | null>(null);
 
   const [clock, setClock] = useState("09:41");
   useEffect(() => {
@@ -145,7 +146,9 @@ function TunEye() {
                   const conf =
                     confidence ?? 78 + Math.floor(Math.random() * 18);
                   setConfidence(conf);
-                  setGrade(conf >= 88 ? "A" : conf >= 75 ? "B" : "C");
+                  const g: Grade =
+                    conf >= 90 ? "A" : conf >= 82 ? "B" : conf >= 74 ? "C" : "Reject";
+                  setGrade(g);
                   go("grading");
                 }
               }}
@@ -156,11 +159,12 @@ function TunEye() {
               go={go}
               species={species}
               weight={weight}
+              price={price}
               onSave={() => {
                 const entry: Session = {
                   species,
                   weight,
-                  price: null,
+                  price,
                   grade: null,
                   conf: null,
                   time: "Just now",
@@ -374,16 +378,7 @@ function Scan({
                       Identified from fin shape &amp; core color
                     </div>
                   </div>
-                  <div className="conf-badge">
-                    <span className="conf-label">Confidence</span>
-                    <span className="conf-num">{aiResult.conf}%</span>
-                  </div>
-                </div>
-                <div className="conf-bar" aria-hidden>
-                  <div
-                    className="conf-bar-fill"
-                    style={{ width: `${aiResult.conf}%` }}
-                  />
+                  <div className="species-tag mono">Detected</div>
                 </div>
               </div>
             )}
@@ -597,13 +592,16 @@ function WeightLight({
   go,
   species,
   weight,
+  price,
   onSave,
 }: {
   go: (s: ScreenId) => void;
   species: Species;
   weight: number;
+  price: number;
   onSave: () => void;
 }) {
+  const total = price * weight;
   return (
     <div className="screen active">
       <TopBar title="Weight recorded" onBack={() => go("weighing")} />
@@ -626,14 +624,38 @@ function WeightLight({
                   {weight.toFixed(2)} kg
                 </span>
               </div>
+              <div className="row">
+                <span className="label">Base price</span>
+                <span className="value mono" style={{ fontSize: 14 }}>
+                  {peso(price)}/kg
+                </span>
+              </div>
             </div>
           </div>
           <div className="split-col-b">
+            <div className={`price-hero grade-hero g-warn`}>
+              <div className="price-hero-left">
+                <div className="label">Estimated value (no grade)</div>
+                <div className="price-hero-total mono">{peso(total)}</div>
+                <div className="price-hero-breakdown mono">
+                  {peso(price)}/kg × {weight.toFixed(2)} kg
+                </div>
+              </div>
+              <div className="price-hero-right">
+                <div className="grade-letter" style={{ fontSize: 22 }}>
+                  Light
+                </div>
+                <div className="label" style={{ color: "rgba(255,255,255,.85)" }}>
+                  Under 10kg
+                </div>
+              </div>
+            </div>
             <div
               className="card"
               style={{
                 background: "var(--warn-soft)",
                 borderColor: "#f0dcb8",
+                marginTop: 12,
               }}
             >
               <div className="row" style={{ alignItems: "flex-start" }}>
@@ -660,7 +682,7 @@ function WeightLight({
                   }}
                 >
                   Below the 10&nbsp;kg grading threshold — saved without a
-                  quality grade or price.
+                  quality grade.
                 </span>
               </div>
             </div>
@@ -695,11 +717,23 @@ function Grading({
   weight: number;
   price: number;
   confidence: number;
-  grade: "A" | "B" | "C";
+  grade: Grade;
   source: "ai" | "manual" | null;
   onSave: () => void;
 }) {
-  const total = useMemo(() => price * weight, [price, weight]);
+  const total = useMemo(
+    () => (grade === "Reject" ? 0 : price * weight),
+    [price, weight, grade],
+  );
+  const gradeKey =
+    grade === "Reject" ? "R" : (grade as "A" | "B" | "C");
+  const gradeLabel = grade === "Reject" ? "Reject" : grade;
+  const gradeCopy: Record<string, string> = {
+    A: "Premium — sashimi grade",
+    B: "Good — market grade",
+    C: "Fair — cooking grade",
+    Reject: "Rejected — not marketable",
+  };
   return (
     <div className="screen active">
       <TopBar
@@ -726,19 +760,34 @@ function Grading({
             </div>
           </div>
           <div className="split-col-b">
-            {/* Price hero — uses the space */}
-            <div className="price-hero">
-              <div className="price-hero-left">
-                <div className="label">Estimated value</div>
-                <div className="price-hero-total mono">{peso(total)}</div>
-                <div className="price-hero-breakdown mono">
-                  {peso(price)}/kg × {weight.toFixed(2)} kg
-                </div>
+            {/* Grade hero — big, colored per grade */}
+            <div className={`grade-hero g-${gradeKey}`}>
+              <div className="grade-hero-letter display">{gradeLabel}</div>
+              <div className="grade-hero-copy">
+                <div className="grade-hero-title display">Grade {gradeLabel}</div>
+                <div className="grade-hero-sub">{gradeCopy[grade]}</div>
               </div>
-              <div className="price-hero-right">
-                <div className="grade-letter">{grade}</div>
-                <div className="label" style={{ color: "var(--accent)" }}>
-                  Grade
+            </div>
+
+            {/* Price breakdown: base × weight = total */}
+            <div className="price-breakdown">
+              <div className="pb-cell">
+                <div className="label">Base price</div>
+                <div className="pb-num mono">{peso(price)}</div>
+                <div className="pb-hint">per kg</div>
+              </div>
+              <div className="pb-op mono">×</div>
+              <div className="pb-cell">
+                <div className="label">Weight</div>
+                <div className="pb-num mono">{weight.toFixed(2)}</div>
+                <div className="pb-hint">kg</div>
+              </div>
+              <div className="pb-op mono">=</div>
+              <div className="pb-cell pb-total">
+                <div className="label">Total value</div>
+                <div className="pb-num mono">{peso(total)}</div>
+                <div className="pb-hint">
+                  {grade === "Reject" ? "rejected sample" : "estimated"}
                 </div>
               </div>
             </div>
@@ -748,24 +797,6 @@ function Grading({
                 <div className="label">Species</div>
                 <div className="value" style={{ fontSize: 14, marginTop: 2 }}>
                   {species} tuna
-                </div>
-              </div>
-              <div className="card">
-                <div className="label">Weight</div>
-                <div
-                  className="value mono"
-                  style={{ fontSize: 14, marginTop: 2 }}
-                >
-                  {weight.toFixed(2)} kg
-                </div>
-              </div>
-              <div className="card">
-                <div className="label">Unit price</div>
-                <div
-                  className="value mono"
-                  style={{ fontSize: 14, marginTop: 2 }}
-                >
-                  {peso(price)}/kg
                 </div>
               </div>
               <div className="card conf-card">
@@ -943,10 +974,12 @@ function History({
                   )}
                   <div
                     className={`hist-grade ${
-                      s.grade ? "g-A" : "g-none"
+                      s.grade
+                        ? "g-" + (s.grade === "Reject" ? "R" : s.grade)
+                        : "g-none"
                     }`}
                   >
-                    {s.grade ? "Grade " + s.grade : "—"}
+                    {s.grade ? (s.grade === "Reject" ? "Reject" : "Grade " + s.grade) : "—"}
                   </div>
                 </div>
               </div>
