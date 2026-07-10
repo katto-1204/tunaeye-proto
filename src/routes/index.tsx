@@ -974,10 +974,12 @@ function History({
                   )}
                   <div
                     className={`hist-grade ${
-                      s.grade ? "g-A" : "g-none"
+                      s.grade
+                        ? "g-" + (s.grade === "Reject" ? "R" : s.grade)
+                        : "g-none"
                     }`}
                   >
-                    {s.grade ? "Grade " + s.grade : "—"}
+                    {s.grade ? (s.grade === "Reject" ? "Reject" : "Grade " + s.grade) : "—"}
                   </div>
                 </div>
               </div>
