@@ -717,11 +717,23 @@ function Grading({
   weight: number;
   price: number;
   confidence: number;
-  grade: "A" | "B" | "C";
+  grade: Grade;
   source: "ai" | "manual" | null;
   onSave: () => void;
 }) {
-  const total = useMemo(() => price * weight, [price, weight]);
+  const total = useMemo(
+    () => (grade === "Reject" ? 0 : price * weight),
+    [price, weight, grade],
+  );
+  const gradeKey =
+    grade === "Reject" ? "R" : (grade as "A" | "B" | "C");
+  const gradeLabel = grade === "Reject" ? "Reject" : grade;
+  const gradeCopy: Record<string, string> = {
+    A: "Premium — sashimi grade",
+    B: "Good — market grade",
+    C: "Fair — cooking grade",
+    Reject: "Rejected — not marketable",
+  };
   return (
     <div className="screen active">
       <TopBar
@@ -748,19 +760,34 @@ function Grading({
             </div>
           </div>
           <div className="split-col-b">
-            {/* Price hero — uses the space */}
-            <div className="price-hero">
-              <div className="price-hero-left">
-                <div className="label">Estimated value</div>
-                <div className="price-hero-total mono">{peso(total)}</div>
-                <div className="price-hero-breakdown mono">
-                  {peso(price)}/kg × {weight.toFixed(2)} kg
-                </div>
+            {/* Grade hero — big, colored per grade */}
+            <div className={`grade-hero g-${gradeKey}`}>
+              <div className="grade-hero-letter display">{gradeLabel}</div>
+              <div className="grade-hero-copy">
+                <div className="grade-hero-title display">Grade {gradeLabel}</div>
+                <div className="grade-hero-sub">{gradeCopy[grade]}</div>
               </div>
-              <div className="price-hero-right">
-                <div className="grade-letter">{grade}</div>
-                <div className="label" style={{ color: "var(--accent)" }}>
-                  Grade
+            </div>
+
+            {/* Price breakdown: base × weight = total */}
+            <div className="price-breakdown">
+              <div className="pb-cell">
+                <div className="label">Base price</div>
+                <div className="pb-num mono">{peso(price)}</div>
+                <div className="pb-hint">per kg</div>
+              </div>
+              <div className="pb-op mono">×</div>
+              <div className="pb-cell">
+                <div className="label">Weight</div>
+                <div className="pb-num mono">{weight.toFixed(2)}</div>
+                <div className="pb-hint">kg</div>
+              </div>
+              <div className="pb-op mono">=</div>
+              <div className="pb-cell pb-total">
+                <div className="label">Total value</div>
+                <div className="pb-num mono">{peso(total)}</div>
+                <div className="pb-hint">
+                  {grade === "Reject" ? "rejected sample" : "estimated"}
                 </div>
               </div>
             </div>
@@ -770,24 +797,6 @@ function Grading({
                 <div className="label">Species</div>
                 <div className="value" style={{ fontSize: 14, marginTop: 2 }}>
                   {species} tuna
-                </div>
-              </div>
-              <div className="card">
-                <div className="label">Weight</div>
-                <div
-                  className="value mono"
-                  style={{ fontSize: 14, marginTop: 2 }}
-                >
-                  {weight.toFixed(2)} kg
-                </div>
-              </div>
-              <div className="card">
-                <div className="label">Unit price</div>
-                <div
-                  className="value mono"
-                  style={{ fontSize: 14, marginTop: 2 }}
-                >
-                  {peso(price)}/kg
                 </div>
               </div>
               <div className="card conf-card">
