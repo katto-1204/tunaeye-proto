@@ -159,11 +159,12 @@ function TunEye() {
               go={go}
               species={species}
               weight={weight}
+              price={price}
               onSave={() => {
                 const entry: Session = {
                   species,
                   weight,
-                  price: null,
+                  price,
                   grade: null,
                   conf: null,
                   time: "Just now",
