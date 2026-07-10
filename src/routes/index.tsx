@@ -12,12 +12,13 @@ type ScreenId =
   | "history";
 
 type Species = "Yellowfin" | "Skipjack";
+type Grade = "A" | "B" | "C" | "Reject";
 
 type Session = {
   species: Species;
   weight: number;
   price: number | null;
-  grade: "A" | "B" | "C" | null;
+  grade: Grade | null;
   conf: number | null;
   time: string;
 };
