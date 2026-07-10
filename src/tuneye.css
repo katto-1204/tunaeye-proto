@@ -86,7 +86,10 @@
   display: flex; align-items: center; gap: 8px;
   font-family: "Space Grotesk", sans-serif; font-weight: 700; font-size: 14px;
 }
-.tuneye-page .brand-mark { width: 16px; height: 16px; border-radius: 4px; background: var(--ink); flex-shrink: 0; }
+.tuneye-page .brand-mark {
+  width: 22px; height: 22px; border-radius: 6px; background: var(--ink);
+  display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+}
 .tuneye-page .time { font-size: 12px; color: var(--faint); }
 
 .tuneye-page .screen {
@@ -485,6 +488,24 @@
 .tuneye-page .threshold-note { font-size: 11.5px; color: var(--faint); text-align: center; margin-top: 6px; }
 .tuneye-page .sample-btns { display: flex; gap: 8px; margin: 12px 0; }
 .tuneye-page .sample-btns .btn { font-size: 12.5px; padding: 10px; }
+.tuneye-page .grade-demo-btns {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 6px;
+  margin-bottom: 8px;
+}
+.tuneye-page .grade-demo-label {
+  width: 100%; font-size: 11px; font-weight: 600; color: var(--sub);
+  letter-spacing: 0.03em; text-transform: uppercase;
+}
+.tuneye-page .grade-demo-btn {
+  flex: 1; min-width: 42px; border: 1.5px solid var(--line);
+  border-radius: 10px; padding: 8px 6px; font-size: 12px; font-weight: 700;
+  background: var(--card); color: var(--sub); cursor: pointer;
+}
+.tuneye-page .grade-demo-btn.active { color: #fff; border-color: transparent; }
+.tuneye-page .grade-demo-btn.g-A.active { background: var(--accent); }
+.tuneye-page .grade-demo-btn.g-B.active { background: #d97706; }
+.tuneye-page .grade-demo-btn.g-C.active { background: #ca8a04; }
+.tuneye-page .grade-demo-btn.g-R.active { background: #dc2626; }
 
 /* Grading */
 .tuneye-page .type-tabs { display: flex; gap: 8px; margin: 10px 0 14px; flex-shrink: 0; }
@@ -501,8 +522,26 @@
   display: flex; align-items: center; justify-content: center;
   position: relative; overflow: hidden;
 }
+.tuneye-page .core-cam.grade-cam {
+  background: #fff;
+  border: 1.5px solid var(--line);
+}
 .tuneye-page .core-cam .cam-frame { width: 70%; height: 60%; }
+.tuneye-page .core-cam .cam-frame-filled {
+  display: flex; align-items: center; justify-content: center;
+  overflow: hidden; background: #fff; opacity: 1;
+  box-shadow: inset 0 0 24px rgba(0, 0, 0, 0.06);
+}
+.tuneye-page .grade-cam .cam-frame-filled {
+  width: 88%; height: 82%;
+  box-shadow: none;
+}
+.tuneye-page .grade-scan-img {
+  width: 100%; height: 100%; object-fit: contain; object-position: center;
+  display: block;
+}
 .tuneye-page .core-cam .cam-caption { font-size: 10.5px; text-align: center; }
+.tuneye-page .grade-cam .cam-caption { color: var(--sub); }
 
 /* Price hero on grading screen — uses the available space */
 .tuneye-page .price-hero {

@@ -1,6 +1,8 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useMemo, useRef, useState } from "react";
+import { confidenceForGrade, gradeImageUrl, simulateGrade } from "../lib/grade-images";
 import { SpeciesIcon } from "../lib/species-icons";
+import { TunEyeLogo } from "../lib/tuneye-logo";
 import "../tuneye.css";
 
 type ScreenId =
@@ -122,6 +124,10 @@ function TunEye() {
   const priceHistory = INITIAL_PRICE_HISTORY;
 
   function go(id: ScreenId) {
+    if (id === "scan" || id === "welcome") {
+      setGrade(null);
+      setGradingConfidence(null);
+    }
     setScreen(id);
   }
 
@@ -151,7 +157,9 @@ function TunEye() {
         <div className="device">
           <div className="statusbar">
             <div className="brand">
-              <span className="brand-mark" />
+              <span className="brand-mark">
+                <TunEyeLogo size={14} color="#fff" />
+              </span>
               TunEye
             </div>
             <div className="time mono">{clock}</div>
@@ -190,16 +198,19 @@ function TunEye() {
               go={go}
               species={species}
               price={price}
-              onCapture={(w) => {
+              onCapture={(w, forcedGrade) => {
                 const rounded = Math.round(w * 100) / 100;
                 setWeight(rounded);
                 if (rounded < 10) go("weight-light");
                 else {
-                  const conf = 78 + Math.floor(Math.random() * 18);
-                  setGradingConfidence(conf);
-                  const g: Grade =
-                    conf >= 90 ? "A" : conf >= 82 ? "B" : conf >= 74 ? "C" : "Reject";
-                  setGrade(g);
+                  const result = forcedGrade
+                    ? {
+                        grade: forcedGrade,
+                        confidence: confidenceForGrade(forcedGrade),
+                      }
+                    : simulateGrade();
+                  setGradingConfidence(result.confidence);
+                  setGrade(result.grade);
                   go("grading");
                 }
               }}
@@ -303,16 +314,7 @@ function Welcome({ go }: { go: (s: ScreenId) => void }) {
       <div className="welcome-body">
         <div className="welcome-copy">
           <div className="welcome-mark">
-            <svg width="26" height="26" viewBox="0 0 24 24" fill="none">
-              <path
-                d="M4 12c3-4 6-6 9-6 3 0 5.5 2 7 6-1.5 4-4 6-7 6-3 0-6-2-9-6Z"
-                stroke="white"
-                strokeWidth="1.6"
-                strokeLinejoin="round"
-              />
-              <path d="M20 12l3-3v6l-3-3Z" fill="white" />
-              <circle cx="8.4" cy="10.6" r=".9" fill="white" />
-            </svg>
+            <TunEyeLogo size={26} color="#fff" />
           </div>
           <h1>Welcome to TunEye</h1>
           <p>
@@ -697,10 +699,11 @@ function Weighing({
   go: (s: ScreenId) => void;
   species: Species;
   price: number;
-  onCapture: (w: number) => void;
+  onCapture: (w: number, forcedGrade?: Grade) => void;
 }) {
   const centerRef = useRef(14 + Math.random() * 10);
   const [val, setVal] = useState<number>(centerRef.current);
+  const [demoGrade, setDemoGrade] = useState<Grade | null>(null);
 
   useEffect(() => {
     const id = window.setInterval(() => {
@@ -821,10 +824,26 @@ function Weighing({
               </button>
             </div>
 
+            {val >= 10 && (
+              <div className="grade-demo-btns">
+                <span className="grade-demo-label">Demo grade</span>
+                {(["A", "B", "C", "Reject"] as Grade[]).map((g) => (
+                  <button
+                    key={g}
+                    type="button"
+                    className={`grade-demo-btn g-${g === "Reject" ? "R" : g}${demoGrade === g ? " active" : ""}`}
+                    onClick={() => setDemoGrade(demoGrade === g ? null : g)}
+                  >
+                    {g === "Reject" ? "Reject" : g}
+                  </button>
+                ))}
+              </div>
+            )}
+
             <div style={{ flex: 1 }} />
             <button
               className="btn btn-primary"
-              onClick={() => onCapture(val)}
+              onClick={() => onCapture(val, demoGrade ?? undefined)}
             >
               Capture weight
             </button>
@@ -949,6 +968,22 @@ function WeightLight({
   );
 }
 
+function GradeCameraPreview({ grade }: { grade: Grade }) {
+  const label = grade === "Reject" ? "Reject" : `Grade ${grade}`;
+  return (
+    <div className="core-cam grade-cam" style={{ flex: 1 }}>
+      <div className="cam-frame cam-frame-filled">
+        <img
+          src={gradeImageUrl(grade)}
+          alt={`${label} — core sample and meat color`}
+          className="grade-scan-img"
+        />
+      </div>
+      <div className="cam-caption mono">core sample &amp; meat color</div>
+    </div>
+  );
+}
+
 function Grading({
   go,
   species,
@@ -999,10 +1034,7 @@ function Grading({
                 </div>
               ))}
             </div>
-            <div className="core-cam" style={{ flex: 1 }}>
-              <div className="cam-frame" />
-              <div className="cam-caption mono">core sample view</div>
-            </div>
+            <GradeCameraPreview grade={grade} />
           </div>
           <div className="split-col-b">
             {/* Grade hero — big, colored per grade */}
