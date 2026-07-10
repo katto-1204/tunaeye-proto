@@ -378,16 +378,7 @@ function Scan({
                       Identified from fin shape &amp; core color
                     </div>
                   </div>
-                  <div className="conf-badge">
-                    <span className="conf-label">Confidence</span>
-                    <span className="conf-num">{aiResult.conf}%</span>
-                  </div>
-                </div>
-                <div className="conf-bar" aria-hidden>
-                  <div
-                    className="conf-bar-fill"
-                    style={{ width: `${aiResult.conf}%` }}
-                  />
+                  <div className="species-tag mono">Detected</div>
                 </div>
               </div>
             )}
