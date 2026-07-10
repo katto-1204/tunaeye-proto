@@ -58,7 +58,7 @@ function TunEye() {
   const [price, setPrice] = useState<number>(280);
   const [date, setDate] = useState<string>(todayStr());
   const [weight, setWeight] = useState<number | null>(null);
-  const [grade, setGrade] = useState<"A" | "B" | "C" | null>(null);
+  const [grade, setGrade] = useState<Grade | null>(null);
 
   const [clock, setClock] = useState("09:41");
   useEffect(() => {
