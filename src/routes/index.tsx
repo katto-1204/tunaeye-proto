@@ -146,7 +146,9 @@ function TunEye() {
                   const conf =
                     confidence ?? 78 + Math.floor(Math.random() * 18);
                   setConfidence(conf);
-                  setGrade(conf >= 88 ? "A" : conf >= 75 ? "B" : "C");
+                  const g: Grade =
+                    conf >= 90 ? "A" : conf >= 82 ? "B" : conf >= 74 ? "C" : "Reject";
+                  setGrade(g);
                   go("grading");
                 }
               }}
