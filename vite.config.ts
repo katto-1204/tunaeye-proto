@@ -12,8 +12,8 @@ export default defineConfig({
     tanstackStart({
       server: { entry: "server" },
     }),
+    nitro(),
     viteReact(),
     tailwindcss(),
-    nitro(),
   ],
 });
