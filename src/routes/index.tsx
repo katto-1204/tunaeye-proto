@@ -592,13 +592,16 @@ function WeightLight({
   go,
   species,
   weight,
+  price,
   onSave,
 }: {
   go: (s: ScreenId) => void;
   species: Species;
   weight: number;
+  price: number;
   onSave: () => void;
 }) {
+  const total = price * weight;
   return (
     <div className="screen active">
       <TopBar title="Weight recorded" onBack={() => go("weighing")} />
@@ -621,14 +624,38 @@ function WeightLight({
                   {weight.toFixed(2)} kg
                 </span>
               </div>
+              <div className="row">
+                <span className="label">Base price</span>
+                <span className="value mono" style={{ fontSize: 14 }}>
+                  {peso(price)}/kg
+                </span>
+              </div>
             </div>
           </div>
           <div className="split-col-b">
+            <div className={`price-hero grade-hero g-warn`}>
+              <div className="price-hero-left">
+                <div className="label">Estimated value (no grade)</div>
+                <div className="price-hero-total mono">{peso(total)}</div>
+                <div className="price-hero-breakdown mono">
+                  {peso(price)}/kg × {weight.toFixed(2)} kg
+                </div>
+              </div>
+              <div className="price-hero-right">
+                <div className="grade-letter" style={{ fontSize: 22 }}>
+                  Light
+                </div>
+                <div className="label" style={{ color: "rgba(255,255,255,.85)" }}>
+                  Under 10kg
+                </div>
+              </div>
+            </div>
             <div
               className="card"
               style={{
                 background: "var(--warn-soft)",
                 borderColor: "#f0dcb8",
+                marginTop: 12,
               }}
             >
               <div className="row" style={{ alignItems: "flex-start" }}>
@@ -655,7 +682,7 @@ function WeightLight({
                   }}
                 >
                   Below the 10&nbsp;kg grading threshold — saved without a
-                  quality grade or price.
+                  quality grade.
                 </span>
               </div>
             </div>
