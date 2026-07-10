@@ -363,3 +363,65 @@
   text-align: center; color: var(--faint); font-size: 11.5px;
   margin-top: 16px; max-width: 400px;
 }
+
+/* ---------- Species tag on scan ---------- */
+.tuneye-page .species-tag {
+  background: var(--ink); color: #fff;
+  font-size: 10.5px; font-weight: 700; letter-spacing: 0.08em;
+  text-transform: uppercase; padding: 6px 10px; border-radius: 999px;
+  align-self: flex-start;
+}
+
+/* ---------- Grade hero (big, colored) ---------- */
+.tuneye-page .grade-hero {
+  display: flex; align-items: center; gap: 18px;
+  border-radius: var(--radius-sm);
+  padding: 18px 20px; color: #fff;
+  box-shadow: 0 14px 28px -14px rgba(12, 20, 16, 0.4);
+  flex-shrink: 0;
+}
+.tuneye-page .grade-hero-letter {
+  font-size: 64px; font-weight: 700; line-height: 1;
+  letter-spacing: -0.03em;
+  min-width: 76px; text-align: center;
+}
+.tuneye-page .grade-hero.g-Reject .grade-hero-letter,
+.tuneye-page .grade-hero .grade-hero-letter[data-long] { font-size: 34px; }
+.tuneye-page .grade-hero-copy { display: flex; flex-direction: column; gap: 4px; }
+.tuneye-page .grade-hero-title { font-size: 20px; font-weight: 700; letter-spacing: -0.01em; }
+.tuneye-page .grade-hero-sub { font-size: 12.5px; color: rgba(255,255,255,0.85); }
+
+.tuneye-page .grade-hero.g-A { background: linear-gradient(135deg, #0c6b46 0%, #0a5638 100%); }
+.tuneye-page .grade-hero.g-B { background: linear-gradient(135deg, #d97706 0%, #b45309 100%); }
+.tuneye-page .grade-hero.g-C { background: linear-gradient(135deg, #eab308 0%, #ca8a04 100%); color: #12161a; }
+.tuneye-page .grade-hero.g-C .grade-hero-sub { color: rgba(18,22,26,0.7); }
+.tuneye-page .grade-hero.g-R { background: linear-gradient(135deg, #dc2626 0%, #991b1b 100%); }
+.tuneye-page .grade-hero.g-warn { background: linear-gradient(135deg, #a15b12 0%, #7c4410 100%); }
+
+/* ---------- Price breakdown row ---------- */
+.tuneye-page .price-breakdown {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr auto 1.3fr;
+  align-items: center; gap: 10px;
+  background: var(--card); border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  padding: 12px 14px; margin-top: 12px; flex-shrink: 0;
+}
+.tuneye-page .pb-cell { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.tuneye-page .pb-num { font-size: 18px; font-weight: 700; letter-spacing: -0.02em; line-height: 1.1; }
+.tuneye-page .pb-hint { font-size: 10.5px; color: var(--faint); }
+.tuneye-page .pb-op { font-size: 20px; color: var(--faint); font-weight: 600; text-align: center; }
+.tuneye-page .pb-total {
+  background: var(--accent-soft); border-radius: 10px;
+  padding: 8px 12px; margin: -4px 0;
+}
+.tuneye-page .pb-total .label { color: var(--accent); }
+.tuneye-page .pb-total .pb-num { color: var(--accent); font-size: 20px; }
+
+/* ---------- History grade colors ---------- */
+.tuneye-page .hist-grade.g-B { background: #fde4c8; color: #b45309; }
+.tuneye-page .hist-grade.g-C { background: #fef3c7; color: #a16207; }
+.tuneye-page .hist-grade.g-R { background: #fde2e2; color: #b91c1c; }
+
+/* Tighter detail grid on grading (2 cards instead of 4) */
+.tuneye-page .detail-grid { grid-template-columns: 1fr 1fr; }
