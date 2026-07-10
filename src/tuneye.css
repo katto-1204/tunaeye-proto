@@ -1,0 +1,365 @@
+/* TunEye tablet UI - scoped styles */
+
+
+.tuneye-page {
+  --ink: #12161a;
+  --sub: #6d7570;
+  --faint: #9aa39d;
+  --canvas: #eef1ee;
+  --card: #ffffff;
+  --card-2: #f5f6f4;
+  --line: #e3e6e1;
+  --accent: #0c6b46;
+  --accent-soft: #e1f2e9;
+  --warn: #a15b12;
+  --warn-soft: #fbf0df;
+  --danger-soft: #fdeaea;
+  --radius: 22px;
+  --radius-sm: 14px;
+
+  background: var(--canvas);
+  background-image: radial-gradient(circle at 15% 10%, rgba(12, 107, 70, 0.05), transparent 45%),
+    radial-gradient(circle at 85% 90%, rgba(12, 107, 70, 0.04), transparent 40%);
+  font-family: "Inter", sans-serif;
+  color: var(--ink);
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 36px 16px 60px;
+}
+.tuneye-page * { box-sizing: border-box; }
+.tuneye-page .mono { font-family: "IBM Plex Mono", monospace; }
+.tuneye-page .display { font-family: "Space Grotesk", sans-serif; }
+
+.tuneye-page button { font-family: inherit; border: none; background: none; cursor: pointer; }
+.tuneye-page input { font-family: inherit; }
+
+/* Header */
+.tuneye-page .page-head { text-align: center; max-width: 640px; margin-bottom: 22px; }
+.tuneye-page .page-head h1 {
+  font-family: "Space Grotesk", sans-serif;
+  font-size: 26px; font-weight: 700; margin: 0 0 6px; letter-spacing: -0.02em;
+}
+.tuneye-page .page-head p { margin: 0; color: var(--sub); font-size: 13.5px; }
+.tuneye-page .breadcrumb {
+  margin-top: 10px; font-size: 11.5px; letter-spacing: 0.04em;
+  color: var(--faint); text-transform: uppercase;
+}
+.tuneye-page .breadcrumb b { color: var(--accent); font-weight: 600; }
+
+/* Pills */
+.tuneye-page .pillbar {
+  display: flex; flex-wrap: wrap; gap: 6px; justify-content: center;
+  margin: 18px 0 26px; max-width: 640px;
+}
+.tuneye-page .pill {
+  border: 1px solid var(--line); background: var(--card); color: var(--sub);
+  font-size: 11.5px; font-weight: 600; padding: 7px 13px; border-radius: 999px;
+  transition: all 0.15s ease;
+}
+.tuneye-page .pill:hover { border-color: var(--accent); color: var(--accent); }
+.tuneye-page .pill.active { background: var(--ink); border-color: var(--ink); color: #fff; }
+
+/* Device */
+.tuneye-page .device-wrap { position: relative; }
+.tuneye-page .device {
+  width: min(860px, 94vw);
+  aspect-ratio: 16 / 10;
+  background: var(--card);
+  border-radius: 28px;
+  border: 1px solid var(--line);
+  box-shadow: 0 30px 70px -20px rgba(12, 20, 16, 0.28), 0 2px 6px rgba(12, 20, 16, 0.06);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+}
+.tuneye-page .statusbar {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 16px 22px 10px; flex-shrink: 0;
+}
+.tuneye-page .brand {
+  display: flex; align-items: center; gap: 8px;
+  font-family: "Space Grotesk", sans-serif; font-weight: 700; font-size: 14px;
+}
+.tuneye-page .brand-mark { width: 16px; height: 16px; border-radius: 4px; background: var(--ink); flex-shrink: 0; }
+.tuneye-page .time { font-size: 12px; color: var(--faint); }
+
+.tuneye-page .screen {
+  display: flex; flex-direction: column; flex: 1; min-height: 0;
+  padding: 6px 34px 26px;
+}
+.tuneye-page .screen-scroll {
+  flex: 1; min-height: 0; overflow-y: auto;
+  display: flex; flex-direction: column; padding-right: 2px;
+}
+.tuneye-page .split-row { display: flex; gap: 26px; flex: 1; min-height: 0; }
+.tuneye-page .split-col-a { flex: 0 0 40%; display: flex; flex-direction: column; min-width: 0; }
+.tuneye-page .split-col-b { flex: 1; display: flex; flex-direction: column; min-width: 0; min-height: 0; }
+.tuneye-page .screen-scroll::-webkit-scrollbar { width: 4px; }
+.tuneye-page .screen-scroll::-webkit-scrollbar-thumb { background: var(--line); border-radius: 4px; }
+
+.tuneye-page .topbar { display: flex; align-items: center; gap: 10px; margin-bottom: 6px; flex-shrink: 0; }
+.tuneye-page .topbar h2 {
+  font-family: "Space Grotesk", sans-serif; font-size: 17px; font-weight: 700;
+  margin: 0; letter-spacing: -0.01em;
+}
+.tuneye-page .iconbtn {
+  width: 32px; height: 32px; border-radius: 10px;
+  border: 1px solid var(--line); background: var(--card);
+  display: flex; align-items: center; justify-content: center;
+  color: var(--ink);
+}
+.tuneye-page .iconbtn:hover { background: var(--card-2); }
+.tuneye-page .spacer { flex: 1; }
+
+/* Buttons */
+.tuneye-page .btn {
+  display: flex; align-items: center; justify-content: center;
+  gap: 8px; border-radius: 14px; padding: 14px 16px;
+  font-size: 14.5px; font-weight: 600;
+  border: 1px solid transparent; width: 100%;
+  transition: opacity 0.15s ease, transform 0.1s ease;
+}
+.tuneye-page .btn:active { transform: scale(0.985); }
+.tuneye-page .btn-primary { background: var(--ink); color: #fff; }
+.tuneye-page .btn-primary:hover { opacity: 0.9; }
+.tuneye-page .btn-ghost { background: var(--card); color: var(--ink); border-color: var(--line); }
+.tuneye-page .btn-ghost:hover { background: var(--card-2); }
+.tuneye-page .btn-row { display: flex; gap: 10px; }
+.tuneye-page .btn-row .btn { flex: 1; }
+.tuneye-page .btn-sm { padding: 10px 14px; font-size: 13px; }
+
+/* Welcome */
+.tuneye-page .welcome-body {
+  flex: 1; display: flex; flex-direction: row; align-items: center;
+  justify-content: center; gap: 48px; text-align: left;
+}
+.tuneye-page .welcome-copy { flex: 0 0 46%; display: flex; flex-direction: column; align-items: flex-start; gap: 14px; }
+.tuneye-page .welcome-mark {
+  width: 60px; height: 60px; border-radius: 18px; background: var(--ink);
+  display: flex; align-items: center; justify-content: center; color: #fff; flex-shrink: 0;
+}
+.tuneye-page .welcome-body h1 {
+  font-family: "Space Grotesk", sans-serif; font-size: 24px;
+  margin: 2px 0 0; letter-spacing: -0.02em;
+}
+.tuneye-page .welcome-body p { color: var(--sub); font-size: 13.5px; line-height: 1.55; max-width: 320px; margin: 0; }
+.tuneye-page .welcome-actions { flex: 0 0 260px; width: 260px; display: flex; flex-direction: column; gap: 10px; }
+
+/* Cards */
+.tuneye-page .card {
+  background: var(--card-2); border: 1px solid var(--line);
+  border-radius: var(--radius-sm); padding: 14px;
+}
+.tuneye-page .row { display: flex; align-items: center; justify-content: space-between; }
+.tuneye-page .label {
+  font-size: 11.5px; color: var(--faint); text-transform: uppercase;
+  letter-spacing: 0.04em; font-weight: 600;
+}
+.tuneye-page .value { font-family: "Space Grotesk", sans-serif; font-weight: 700; font-size: 15px; }
+
+/* Scan camera */
+.tuneye-page .cam-box {
+  background: #101413; border-radius: 18px; aspect-ratio: 4/3;
+  display: flex; align-items: center; justify-content: center;
+  position: relative; margin: 10px 0 14px; overflow: hidden; flex-shrink: 0;
+}
+.tuneye-page .cam-frame { width: 78%; height: 70%; border: 2px solid var(--accent); border-radius: 14px; opacity: 0.8; }
+.tuneye-page .cam-scanline {
+  position: absolute; left: 11%; right: 11%; height: 2px;
+  background: linear-gradient(90deg, transparent, #4ade80, transparent);
+  animation: tuneye-scan 1.8s linear infinite; opacity: 0.9;
+}
+@keyframes tuneye-scan { 0% { top: 16%; } 100% { top: 84%; } }
+.tuneye-page .cam-caption {
+  position: absolute; bottom: 10px; color: #8ea89b; font-size: 11px;
+  letter-spacing: 0.03em;
+}
+
+.tuneye-page .status-line { display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 600; margin-bottom: 2px; }
+.tuneye-page .dot-live { width: 7px; height: 7px; border-radius: 50%; background: var(--accent); animation: tuneye-pulse 1.2s ease-in-out infinite; flex-shrink: 0; }
+@keyframes tuneye-pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.35; } }
+.tuneye-page .sub-line { color: var(--sub); font-size: 12.5px; margin-bottom: 14px; }
+
+/* Result card w/ confidence */
+.tuneye-page .result-card {
+  background: var(--accent-soft); border: 1px solid #c7e6d5;
+  border-radius: var(--radius-sm); padding: 16px;
+  display: flex; flex-direction: column; gap: 10px; margin-bottom: 12px;
+}
+.tuneye-page .result-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; }
+.tuneye-page .result-species { font-family: "Space Grotesk", sans-serif; font-weight: 700; font-size: 19px; }
+.tuneye-page .conf-badge {
+  background: #fff; border: 1px solid #c7e6d5; color: var(--accent);
+  padding: 6px 10px; border-radius: 12px;
+  display: flex; flex-direction: column; align-items: flex-end; line-height: 1;
+  min-width: 88px;
+}
+.tuneye-page .conf-badge.solid {
+  background: var(--accent-soft);
+  font-family: "IBM Plex Mono", monospace; font-size: 11.5px; font-weight: 700;
+  padding: 3px 9px; border-radius: 999px;
+}
+.tuneye-page .conf-label { font-size: 9.5px; letter-spacing: 0.08em; text-transform: uppercase; color: #3f7a5c; font-weight: 600; }
+.tuneye-page .conf-num { font-family: "IBM Plex Mono", monospace; font-size: 18px; font-weight: 700; margin-top: 4px; }
+.tuneye-page .result-sub { font-size: 12px; color: #3f7a5c; margin-top: 2px; }
+.tuneye-page .conf-bar { height: 5px; border-radius: 999px; background: rgba(12, 107, 70, 0.12); overflow: hidden; }
+.tuneye-page .conf-bar-fill { height: 100%; background: var(--accent); border-radius: 999px; transition: width 0.4s ease; }
+
+/* Price card */
+.tuneye-page .price-card {
+  background: var(--card); border: 1px solid var(--line);
+  border-radius: var(--radius-sm); padding: 12px 14px 12px 16px;
+  margin-bottom: 12px; flex-shrink: 0; position: relative;
+}
+.tuneye-page .price-card::before {
+  content: ""; position: absolute; left: 0; top: 12px; bottom: 12px;
+  width: 3px; border-radius: 3px; background: var(--accent);
+}
+.tuneye-page .price-card .row { align-items: flex-end; gap: 14px; }
+.tuneye-page .price-field { display: flex; flex-direction: column; gap: 5px; }
+.tuneye-page .price-field.grow { flex: 1; }
+.tuneye-page .price-field input {
+  border: 1px solid var(--line); background: var(--card-2);
+  border-radius: 10px; padding: 8px 10px;
+  font-family: "IBM Plex Mono", monospace; font-size: 13px; color: var(--ink); width: 100%;
+}
+.tuneye-page .price-field input:focus { outline: none; border-color: var(--ink); }
+.tuneye-page .price-field .unit-prefix { position: relative; }
+.tuneye-page .price-field .unit-prefix input { padding-left: 22px; }
+.tuneye-page .price-field .unit-prefix span {
+  position: absolute; left: 10px; top: 50%; transform: translateY(-50%);
+  font-size: 12px; color: var(--faint); font-family: "IBM Plex Mono", monospace;
+}
+
+/* Divider note */
+.tuneye-page .divider-note {
+  display: flex; align-items: center; gap: 10px; margin: 6px 0 12px;
+  color: var(--sub); font-size: 12px; line-height: 1.5;
+}
+.tuneye-page .divider-note::before {
+  content: ""; flex-shrink: 0; width: 3px; align-self: stretch;
+  border-radius: 3px; background: var(--line);
+}
+
+/* Chips */
+.tuneye-page .chip-row { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 14px; }
+.tuneye-page .chip {
+  border: 1.5px solid var(--line); background: var(--card); color: var(--ink);
+  font-size: 13px; font-weight: 600; padding: 10px 16px; border-radius: 999px;
+  display: flex; align-items: center; gap: 7px; transition: all 0.15s ease;
+}
+.tuneye-page .chip:hover { border-color: var(--ink); background: var(--card-2); }
+.tuneye-page .chip.selected { background: var(--ink); border-color: var(--ink); color: #fff; }
+.tuneye-page .chip .chip-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--line); flex-shrink: 0; }
+.tuneye-page .chip.selected .chip-dot { background: #fff; }
+
+/* Weighing gauge */
+.tuneye-page .gauge-wrap { display: flex; flex-direction: column; align-items: center; margin: 6px 0 10px; flex-shrink: 0; }
+.tuneye-page .gauge-num { font-family: "IBM Plex Mono", monospace; font-size: 40px; font-weight: 600; letter-spacing: -0.02em; margin-top: 8px; }
+.tuneye-page .gauge-unit { font-size: 12px; color: var(--sub); margin-top: -4px; }
+.tuneye-page .threshold-note { font-size: 11.5px; color: var(--faint); text-align: center; margin-top: 6px; }
+.tuneye-page .sample-btns { display: flex; gap: 8px; margin: 12px 0; }
+.tuneye-page .sample-btns .btn { font-size: 12.5px; padding: 10px; }
+
+/* Grading */
+.tuneye-page .type-tabs { display: flex; gap: 8px; margin: 10px 0 14px; flex-shrink: 0; }
+.tuneye-page .type-tab {
+  flex: 1; border: 1.5px solid var(--line); border-radius: 12px;
+  padding: 10px 4px; text-align: center;
+  font-size: 11.5px; font-weight: 600; color: var(--sub); background: var(--card);
+}
+.tuneye-page .type-tab.active { border-color: var(--ink); color: var(--ink); background: var(--card-2); }
+.tuneye-page .detail-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 6px; }
+.tuneye-page .conf-card { display: flex; flex-direction: column; gap: 8px; }
+.tuneye-page .core-cam {
+  background: #101413; border-radius: 16px; min-height: 0;
+  display: flex; align-items: center; justify-content: center;
+  position: relative; overflow: hidden;
+}
+.tuneye-page .core-cam .cam-frame { width: 70%; height: 60%; }
+.tuneye-page .core-cam .cam-caption { font-size: 10.5px; text-align: center; }
+
+/* Price hero on grading screen — uses the available space */
+.tuneye-page .price-hero {
+  display: flex; align-items: stretch; gap: 14px;
+  background: linear-gradient(135deg, var(--accent) 0%, #0a5638 100%);
+  border-radius: var(--radius-sm);
+  padding: 16px 18px; color: #fff;
+  box-shadow: 0 12px 24px -12px rgba(12, 107, 70, 0.45);
+}
+.tuneye-page .price-hero-left { flex: 1; display: flex; flex-direction: column; gap: 4px; }
+.tuneye-page .price-hero .label { color: rgba(255, 255, 255, 0.75); }
+.tuneye-page .price-hero-total {
+  font-family: "IBM Plex Mono", monospace; font-size: 30px; font-weight: 600;
+  letter-spacing: -0.02em; line-height: 1.1;
+}
+.tuneye-page .price-hero-breakdown { font-size: 12px; color: rgba(255, 255, 255, 0.75); }
+.tuneye-page .price-hero-right {
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  padding: 6px 14px; border-left: 1px dashed rgba(255, 255, 255, 0.35);
+  min-width: 74px;
+}
+.tuneye-page .grade-letter {
+  font-family: "Space Grotesk", sans-serif; font-size: 40px; font-weight: 700;
+  color: #fff; line-height: 1;
+}
+
+/* Success/receipt */
+.tuneye-page .check-ring {
+  width: 60px; height: 60px; border-radius: 50%;
+  background: var(--accent-soft); border: 1px solid #c7e6d5;
+  display: flex; align-items: center; justify-content: center; color: var(--accent);
+}
+.tuneye-page .success-wrap h2 { font-family: "Space Grotesk", sans-serif; font-size: 19px; margin: 4px 0 0; }
+.tuneye-page .success-wrap p.sub { color: var(--sub); font-size: 12.5px; margin: 0 0 6px; }
+.tuneye-page .receipt {
+  width: 100%; background: var(--card-2); border: 1px dashed var(--line);
+  border-radius: var(--radius-sm); padding: 14px 16px; text-align: left; margin: 6px 0 16px;
+}
+.tuneye-page .receipt .r-row {
+  display: flex; justify-content: space-between; padding: 6px 0;
+  font-size: 13px; border-bottom: 1px dashed var(--line);
+}
+.tuneye-page .receipt .r-row:last-child { border-bottom: none; }
+.tuneye-page .receipt .r-row span:first-child { color: var(--sub); }
+.tuneye-page .receipt .r-row span:last-child { font-weight: 600; font-family: "IBM Plex Mono", monospace; }
+
+/* History */
+.tuneye-page .hist-search {
+  display: flex; align-items: center; gap: 8px;
+  background: var(--card-2); border: 1px solid var(--line);
+  border-radius: 12px; padding: 9px 12px;
+  margin: 8px 0 12px; color: var(--faint); font-size: 12.5px; flex-shrink: 0;
+}
+.tuneye-page .hist-item {
+  display: flex; align-items: center; gap: 10px;
+  padding: 11px 4px; border-bottom: 1px solid var(--line);
+}
+.tuneye-page .hist-item:last-child { border-bottom: none; }
+.tuneye-page .hist-swatch {
+  width: 38px; height: 38px; border-radius: 10px; background: var(--card-2);
+  border: 1px solid var(--line); display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+}
+.tuneye-page .hist-main { flex: 1; min-width: 0; }
+.tuneye-page .hist-name { font-size: 13px; font-weight: 600; }
+.tuneye-page .hist-meta { font-size: 11px; color: var(--faint); margin-top: 1px; }
+.tuneye-page .hist-right { display: flex; flex-direction: column; align-items: flex-end; gap: 4px; }
+.tuneye-page .hist-value { font-size: 13px; font-weight: 700; color: var(--accent); }
+.tuneye-page .hist-grade {
+  font-family: "IBM Plex Mono", monospace; font-size: 11.5px; font-weight: 700;
+  padding: 3px 9px; border-radius: 999px; flex-shrink: 0;
+}
+.tuneye-page .hist-grade.g-A { background: var(--accent-soft); color: var(--accent); }
+.tuneye-page .hist-grade.g-none { background: var(--warn-soft); color: var(--warn); }
+.tuneye-page .empty-state {
+  flex: 1; display: flex; flex-direction: column; align-items: center;
+  justify-content: center; text-align: center; color: var(--faint); gap: 8px;
+}
+
+.tuneye-page .caption-note {
+  text-align: center; color: var(--faint); font-size: 11.5px;
+  margin-top: 16px; max-width: 400px;
+}
