@@ -77,14 +77,12 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "Lovable App" },
-      { name: "description", content: "Lovable Generated Project" },
-      { name: "author", content: "Lovable" },
-      { property: "og:title", content: "Lovable App" },
-      { property: "og:description", content: "Lovable Generated Project" },
+      { title: "TunEye — Tuna Species & Quality Grading" },
+      { name: "description", content: "Automated tuna species classification and quality grading, running on a tablet at the dock." },
+      { property: "og:title", content: "TunEye — Tuna Species & Quality Grading" },
+      { property: "og:description", content: "Automated tuna species classification and quality grading, running on a tablet at the dock." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
-      { name: "twitter:site", content: "@Lovable" },
     ],
     links: [
       {
