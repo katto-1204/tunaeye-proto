@@ -1,10 +1,12 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useMemo, useRef, useState } from "react";
+import { SpeciesIcon } from "../lib/species-icons";
 import "../tuneye.css";
 
 type ScreenId =
   | "welcome"
   | "scan"
+  | "pricing"
   | "weighing"
   | "weight-light"
   | "grading"
@@ -13,6 +15,7 @@ type ScreenId =
 
 type Species = "Yellowfin" | "Skipjack";
 type Grade = "A" | "B" | "C" | "Reject";
+type SpeciesSource = "ai" | "manual";
 
 type Session = {
   species: Species;
@@ -23,14 +26,48 @@ type Session = {
   time: string;
 };
 
+type PriceRecord = {
+  date: string;
+  yellowfin: number;
+  skipjack: number;
+};
+
+const INITIAL_PRICE_HISTORY: PriceRecord[] = [
+  { date: "2026-07-09", yellowfin: 280, skipjack: 150 },
+  { date: "2026-07-08", yellowfin: 275, skipjack: 148 },
+  { date: "2026-07-07", yellowfin: 270, skipjack: 155 },
+  { date: "2026-07-06", yellowfin: 265, skipjack: 152 },
+  { date: "2026-07-05", yellowfin: 268, skipjack: 145 },
+];
+
+function formatPriceDate(iso: string) {
+  const d = new Date(iso + "T12:00:00");
+  return d.toLocaleDateString("en-PH", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  });
+}
+
+function priceDelta(current: number, previous: number | null) {
+  if (previous == null) return null;
+  const diff = current - previous;
+  return { diff, up: diff > 0, down: diff < 0 };
+}
+
 const STEPS: { id: ScreenId; label: string }[] = [
   { id: "welcome", label: "Welcome" },
   { id: "scan", label: "Scan" },
+  { id: "pricing", label: "Pricing" },
   { id: "weighing", label: "Weighing" },
   { id: "grading", label: "Grading" },
   { id: "receipt", label: "Result" },
   { id: "history", label: "History" },
 ];
+
+function defaultPriceFor(species: Species) {
+  return species === "Yellowfin" ? 280 : 150;
+}
 
 const peso = (n: number) =>
   "₱" + n.toLocaleString("en-PH", { maximumFractionDigits: 0 });
@@ -53,8 +90,9 @@ export const Route = createFileRoute("/")({
 function TunEye() {
   const [screen, setScreen] = useState<ScreenId>("welcome");
   const [species, setSpecies] = useState<Species | null>(null);
-  const [confidence, setConfidence] = useState<number | null>(null);
-  const [source, setSource] = useState<"ai" | "manual" | null>(null);
+  const [speciesSource, setSpeciesSource] = useState<SpeciesSource | null>(null);
+  const [speciesAiConf, setSpeciesAiConf] = useState<number | null>(null);
+  const [gradingConfidence, setGradingConfidence] = useState<number | null>(null);
   const [price, setPrice] = useState<number>(280);
   const [date, setDate] = useState<string>(todayStr());
   const [weight, setWeight] = useState<number | null>(null);
@@ -80,6 +118,8 @@ function TunEye() {
     { species: "Skipjack", weight: 14.6, price: 150, grade: "B", conf: 81, time: "Jul 9, 07:40" },
     { species: "Yellowfin", weight: 7.8, price: null, grade: null, conf: null, time: "Jul 8, 16:02" },
   ]);
+
+  const priceHistory = INITIAL_PRICE_HISTORY;
 
   function go(id: ScreenId) {
     setScreen(id);
@@ -121,16 +161,28 @@ function TunEye() {
           {screen === "scan" && (
             <Scan
               go={go}
+              onConfirm={(sp, source, conf) => {
+                setSpecies(sp);
+                setSpeciesSource(source);
+                setSpeciesAiConf(source === "ai" ? (conf ?? null) : null);
+                setPrice(defaultPriceFor(sp));
+                setGradingConfidence(null);
+                go("pricing");
+              }}
+            />
+          )}
+          {screen === "pricing" && species && (
+            <Pricing
+              go={go}
+              species={species}
+              speciesSource={speciesSource ?? "manual"}
+              speciesAiConf={speciesAiConf}
               price={price}
               setPrice={setPrice}
               date={date}
               setDate={setDate}
-              onConfirm={(sp, conf, src) => {
-                setSpecies(sp);
-                setConfidence(conf);
-                setSource(src);
-                go("weighing");
-              }}
+              priceHistory={priceHistory}
+              onContinue={() => go("weighing")}
             />
           )}
           {screen === "weighing" && species && (
@@ -143,9 +195,8 @@ function TunEye() {
                 setWeight(rounded);
                 if (rounded < 10) go("weight-light");
                 else {
-                  const conf =
-                    confidence ?? 78 + Math.floor(Math.random() * 18);
-                  setConfidence(conf);
+                  const conf = 78 + Math.floor(Math.random() * 18);
+                  setGradingConfidence(conf);
                   const g: Grade =
                     conf >= 90 ? "A" : conf >= 82 ? "B" : conf >= 74 ? "C" : "Reject";
                   setGrade(g);
@@ -180,16 +231,15 @@ function TunEye() {
               species={species}
               weight={weight}
               price={price}
-              confidence={confidence ?? 0}
+              gradingConfidence={gradingConfidence ?? 0}
               grade={grade}
-              source={source}
               onSave={() => {
                 const entry: Session = {
                   species,
                   weight,
                   price,
                   grade,
-                  conf: confidence,
+                  conf: gradingConfidence,
                   time: "Just now",
                 };
                 setSessions((s) => [entry, ...s]);
@@ -283,27 +333,163 @@ function Welcome({ go }: { go: (s: ScreenId) => void }) {
   );
 }
 
+function PriceHistoryPanel({ records }: { records: PriceRecord[] }) {
+  return (
+    <div className="price-history">
+      <div className="price-history-head">
+        <span className="label">Base price history</span>
+        <span className="price-history-hint">per kg · daily record</span>
+      </div>
+      <div className="price-history-table">
+        <div className="price-history-row price-history-header">
+          <span>Date</span>
+          <span>Yellowfin</span>
+          <span>Skipjack</span>
+        </div>
+        {records.map((row, i) => {
+          const prev = records[i + 1] ?? null;
+          const yfDelta = priceDelta(row.yellowfin, prev?.yellowfin ?? null);
+          const skDelta = priceDelta(row.skipjack, prev?.skipjack ?? null);
+          return (
+            <div className="price-history-row" key={row.date}>
+              <span className="mono ph-date">{formatPriceDate(row.date)}</span>
+              <span className="ph-price">
+                {peso(row.yellowfin)}
+                {yfDelta && (
+                  <em
+                    className={`ph-delta ${yfDelta.up ? "up" : yfDelta.down ? "down" : ""}`}
+                  >
+                    {yfDelta.up ? "+" : ""}
+                    {yfDelta.diff}
+                  </em>
+                )}
+              </span>
+              <span className="ph-price">
+                {peso(row.skipjack)}
+                {skDelta && (
+                  <em
+                    className={`ph-delta ${skDelta.up ? "up" : skDelta.down ? "down" : ""}`}
+                  >
+                    {skDelta.up ? "+" : ""}
+                    {skDelta.diff}
+                  </em>
+                )}
+              </span>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+function SpeciesResultCard({
+  species,
+  conf,
+  source,
+}: {
+  species: Species;
+  conf?: number;
+  source: SpeciesSource;
+}) {
+  const isAi = source === "ai";
+
+  return (
+    <div className={`species-result-card ${isAi ? "ai" : "manual"}`}>
+      <div className="species-result-icon-wrap">
+        <SpeciesIcon species={species} size={44} />
+      </div>
+      <div className="species-result-body">
+        <div className="species-result-top">
+          <div className="species-result-name display">{species} tuna</div>
+          <span className={`species-result-badge ${isAi ? "ai" : "manual"}`}>
+            {isAi ? (
+              <>
+                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" aria-hidden>
+                  <path d="M12 2l2.2 6.8H21l-5.5 4 2.1 6.8L12 15.8 6.4 19.6l2.1-6.8L3 8.8h6.8L12 2Z" fill="currentColor" />
+                </svg>
+                AI detected
+              </>
+            ) : (
+              <>
+                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" aria-hidden>
+                  <path d="M7 11V7a5 5 0 0 1 10 0v4M5 11h14v10H5V11Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+                </svg>
+                Your pick
+              </>
+            )}
+          </span>
+        </div>
+        <div className="species-result-sub">
+          {isAi
+            ? "Identified from core sample & meat color"
+            : "Species chosen manually on scanner"}
+        </div>
+        {isAi && conf != null && (
+          <div className="species-result-conf">
+            <div className="species-result-conf-bar" aria-hidden>
+              <div className="species-result-conf-fill" style={{ width: `${conf}%` }} />
+            </div>
+            <span className="mono">{conf}% match</span>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function SpeciesPicker({
+  value,
+  onChange,
+  note,
+  suggested,
+}: {
+  value: Species | null;
+  onChange: (sp: Species) => void;
+  note: string;
+  suggested?: Species | null;
+}) {
+  return (
+    <div className="species-picker-wrap">
+      <div className="divider-note">{note}</div>
+      <div className="species-picker">
+        {(["Yellowfin", "Skipjack"] as Species[]).map((sp) => {
+          const selected = value === sp;
+          const isSuggested = suggested === sp && !selected;
+          return (
+            <button
+              key={sp}
+              type="button"
+              className={`species-tile ${selected ? "selected" : ""} ${isSuggested ? "suggested" : ""}`}
+              onClick={() => onChange(sp)}
+              aria-pressed={selected}
+            >
+              {isSuggested && <span className="species-tile-hint">AI pick</span>}
+              <span className="species-tile-icon">
+                <SpeciesIcon species={sp} size={48} variant="fish" />
+              </span>
+              <span className="species-tile-label">{sp}</span>
+              <span className="species-tile-sub">tuna</span>
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
 function Scan({
   go,
-  price,
-  setPrice,
-  date,
-  setDate,
   onConfirm,
 }: {
   go: (s: ScreenId) => void;
-  price: number;
-  setPrice: (n: number) => void;
-  date: string;
-  setDate: (s: string) => void;
-  onConfirm: (sp: Species, conf: number, src: "ai" | "manual") => void;
+  onConfirm: (sp: Species, source: SpeciesSource, conf?: number) => void;
 }) {
   const [aiResult, setAiResult] = useState<{ sp: Species; conf: number } | null>(null);
   const [manual, setManual] = useState<Species | null>(null);
-  const [mode, setMode] = useState<"analyzing" | "ai" | "manual">("analyzing");
+  const isAnalyzing = aiResult === null;
 
   useEffect(() => {
-    setMode("analyzing");
     setAiResult(null);
     setManual(null);
     const t = window.setTimeout(() => {
@@ -313,10 +499,14 @@ function Scan({
       ];
       const pick = options[Math.floor(Math.random() * options.length)];
       setAiResult(pick);
-      setMode("ai");
     }, 1600);
     return () => window.clearTimeout(t);
   }, []);
+
+  const canContinue = manual != null || aiResult != null;
+  const pickedManual = manual != null;
+  const previewSpecies = manual ?? aiResult?.sp ?? null;
+  const previewSource: SpeciesSource = pickedManual ? "manual" : "ai";
 
   return (
     <div className="screen active">
@@ -329,14 +519,132 @@ function Scan({
               <div className="cam-scanline" />
               <div className="cam-caption mono">camera preview</div>
             </div>
+
+            {previewSpecies ? (
+              <SpeciesResultCard
+                species={previewSpecies}
+                conf={pickedManual ? undefined : aiResult?.conf}
+                source={previewSource}
+              />
+            ) : isAnalyzing ? (
+              <div className="scan-species-placeholder">
+                <span className="dot-live" />
+                <span>Scanning for species…</span>
+              </div>
+            ) : null}
+
             <div className="status-line">
-              <span className="dot-live" />
-              {mode === "analyzing" ? "Analyzing sample…" : "Species identified"}
+              <span className={`dot-live ${isAnalyzing ? "" : "done"}`} />
+              {isAnalyzing ? "Analyzing sample…" : "Species identified"}
             </div>
             <div className="sub-line">
-              {mode === "analyzing"
-                ? "Detecting species from core sample"
-                : "Review the detected species below"}
+              {isAnalyzing
+                ? "Analyzing core sample & meat color"
+                : "Review the result or pick manually"}
+            </div>
+          </div>
+
+          <div className="split-col-b">
+            <SpeciesPicker
+              value={manual}
+              onChange={setManual}
+              suggested={pickedManual ? null : aiResult?.sp ?? null}
+              note={
+                isAnalyzing
+                  ? "Or select the species manually"
+                  : "Or select a different species manually"
+              }
+            />
+
+            <div style={{ flex: 1 }} />
+
+            <button
+              className="btn btn-primary"
+              disabled={!canContinue}
+              style={{
+                opacity: canContinue ? 1 : 0.4,
+                pointerEvents: canContinue ? "auto" : "none",
+              }}
+              onClick={() => {
+                if (pickedManual && manual) onConfirm(manual, "manual");
+                else if (aiResult) onConfirm(aiResult.sp, "ai", aiResult.conf);
+              }}
+            >
+              {pickedManual
+                ? `Continue with ${manual}`
+                : aiResult
+                  ? `Confirm ${aiResult.sp}`
+                  : "Select a species"}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function Pricing({
+  go,
+  species,
+  speciesSource,
+  speciesAiConf,
+  price,
+  setPrice,
+  date,
+  setDate,
+  priceHistory,
+  onContinue,
+}: {
+  go: (s: ScreenId) => void;
+  species: Species;
+  speciesSource: SpeciesSource;
+  speciesAiConf: number | null;
+  price: number;
+  setPrice: (n: number) => void;
+  date: string;
+  setDate: (s: string) => void;
+  priceHistory: PriceRecord[];
+  onContinue: () => void;
+}) {
+  const historyPrice =
+    species === "Yellowfin"
+      ? priceHistory[0]?.yellowfin
+      : priceHistory[0]?.skipjack;
+  const delta =
+    historyPrice != null ? priceDelta(price, historyPrice) : null;
+
+  return (
+    <div className="screen active">
+      <TopBar title="Set base price" onBack={() => go("scan")} />
+      <div className="screen-scroll">
+        <div className="split-row">
+          <div className="split-col-a">
+            <SpeciesResultCard
+              species={species}
+              source={speciesSource}
+              conf={speciesAiConf ?? undefined}
+            />
+            <div className="card pricing-summary">
+              <div className="row">
+                <span className="label">Species</span>
+                <span className="value" style={{ fontSize: 14 }}>
+                  {species} tuna
+                </span>
+              </div>
+              <div className="row" style={{ marginTop: 10 }}>
+                <span className="label">Today's base price</span>
+                <span className="value mono" style={{ fontSize: 18, color: "var(--accent)" }}>
+                  {peso(price)}/kg
+                </span>
+              </div>
+              {delta && (
+                <div className="pricing-delta-note">
+                  <span className={`ph-delta ${delta.up ? "up" : delta.down ? "down" : ""}`}>
+                    {delta.up ? "+" : ""}
+                    {delta.diff} vs last recorded day
+                  </span>
+                </div>
+              )}
             </div>
           </div>
 
@@ -352,7 +660,7 @@ function Scan({
                   />
                 </div>
                 <div className="price-field grow">
-                  <span className="label">Base price today (per kg)</span>
+                  <span className="label">{species} price (per kg)</span>
                   <div className="unit-prefix">
                     <span>₱</span>
                     <input
@@ -367,73 +675,12 @@ function Scan({
               </div>
             </div>
 
-            {mode === "ai" && aiResult && (
-              <div className="result-card show">
-                <div className="result-top">
-                  <div>
-                    <div className="result-species display">
-                      {aiResult.sp} tuna
-                    </div>
-                    <div className="result-sub">
-                      Identified from fin shape &amp; core color
-                    </div>
-                  </div>
-                  <div className="species-tag mono">Detected</div>
-                </div>
-              </div>
-            )}
-
-            {mode === "manual" && (
-              <div>
-                <div className="divider-note">
-                  AI wasn't sure — select the species manually.
-                </div>
-                <div className="chip-row">
-                  {(["Yellowfin", "Skipjack"] as Species[]).map((sp) => (
-                    <button
-                      key={sp}
-                      className={`chip ${manual === sp ? "selected" : ""}`}
-                      onClick={() => setManual(sp)}
-                    >
-                      <span className="chip-dot" />
-                      {sp} tuna
-                    </button>
-                  ))}
-                </div>
-              </div>
-            )}
+            <PriceHistoryPanel records={priceHistory} />
 
             <div style={{ flex: 1 }} />
-
-            {mode === "ai" && aiResult && (
-              <div className="btn-row">
-                <button
-                  className="btn btn-ghost"
-                  onClick={() => setMode("manual")}
-                >
-                  Not correct? Skip
-                </button>
-                <button
-                  className="btn btn-primary"
-                  onClick={() => onConfirm(aiResult.sp, aiResult.conf, "ai")}
-                >
-                  Confirm
-                </button>
-              </div>
-            )}
-            {mode === "manual" && (
-              <button
-                className="btn btn-primary"
-                disabled={!manual}
-                style={{
-                  opacity: manual ? 1 : 0.4,
-                  pointerEvents: manual ? "auto" : "none",
-                }}
-                onClick={() => manual && onConfirm(manual, 100, "manual")}
-              >
-                Continue
-              </button>
-            )}
+            <button className="btn btn-primary" onClick={onContinue}>
+              Continue to weighing
+            </button>
           </div>
         </div>
       </div>
@@ -470,7 +717,7 @@ function Weighing({
 
   return (
     <div className="screen active">
-      <TopBar title="Weigh sample" onBack={() => go("scan")} />
+      <TopBar title="Weigh sample" onBack={() => go("pricing")} />
       <div className="screen-scroll">
         <div className="split-row">
           <div
@@ -707,18 +954,16 @@ function Grading({
   species,
   weight,
   price,
-  confidence,
+  gradingConfidence,
   grade,
-  source,
   onSave,
 }: {
   go: (s: ScreenId) => void;
   species: Species;
   weight: number;
   price: number;
-  confidence: number;
+  gradingConfidence: number;
   grade: Grade;
-  source: "ai" | "manual" | null;
   onSave: () => void;
 }) {
   const total = useMemo(
@@ -803,17 +1048,15 @@ function Grading({
                 <div className="row">
                   <div className="label">Confidence</div>
                   <div className="value mono" style={{ fontSize: 14 }}>
-                    {source === "manual" ? "Manual" : confidence + "%"}
+                    {gradingConfidence}%
                   </div>
                 </div>
-                {source !== "manual" && (
-                  <div className="conf-bar" aria-hidden>
-                    <div
-                      className="conf-bar-fill"
-                      style={{ width: `${confidence}%` }}
-                    />
-                  </div>
-                )}
+                <div className="conf-bar" aria-hidden>
+                  <div
+                    className="conf-bar-fill"
+                    style={{ width: `${gradingConfidence}%` }}
+                  />
+                </div>
               </div>
             </div>
 
@@ -836,6 +1079,106 @@ function Grading({
   );
 }
 
+function ReceiptBarcode() {
+  const bars = [2, 1, 3, 1, 2, 4, 1, 2, 1, 3, 2, 1, 4, 1, 2, 3, 1, 2, 1, 3, 2, 4, 1, 2, 1, 3, 1, 2, 4, 1, 2, 3, 1, 2, 1, 4, 2, 1, 3, 2];
+  return (
+    <div className="thermal-barcode" aria-hidden>
+      {bars.map((w, i) => (
+        <span key={i} style={{ width: w }} />
+      ))}
+    </div>
+  );
+}
+
+function ThermalPaper({
+  entry,
+  receiptNo,
+  recordedAt,
+  compact,
+}: {
+  entry: Session;
+  receiptNo: string;
+  recordedAt: string;
+  compact?: boolean;
+}) {
+  const graded = entry.grade != null;
+  const total =
+    entry.price != null ? entry.price * entry.weight : 0;
+
+  return (
+    <div className={`thermal-paper ${compact ? "compact" : ""}`}>
+      <div className="thermal-dash">- - - - - - - - - - - - - - - -</div>
+      <div className="thermal-title">RECEIPT</div>
+      <div className="thermal-dash">- - - - - - - - - - - - - - - -</div>
+
+      <div className="thermal-section">
+        <div className="thermal-section-title">Sample Details</div>
+        <div className="thermal-kv">
+          <span>Receipt No.</span>
+          <span className="mono">{receiptNo}</span>
+        </div>
+        <div className="thermal-kv">
+          <span>Recorded</span>
+          <span>{recordedAt}</span>
+        </div>
+        <div className="thermal-kv">
+          <span>Species</span>
+          <span>{entry.species} tuna</span>
+        </div>
+        <div className="thermal-kv">
+          <span>Weight</span>
+          <span className="mono">{entry.weight.toFixed(2)} kg</span>
+        </div>
+        <div className="thermal-kv">
+          <span>Status</span>
+          <span className="thermal-badge">Saved</span>
+        </div>
+      </div>
+
+      <div className="thermal-line" />
+
+      <div className="thermal-section">
+        <div className="thermal-section-title">Grading Details</div>
+        {entry.price != null && (
+          <div className="thermal-item">
+            <span>Base price / kg</span>
+            <span className="mono">{peso(entry.price)}</span>
+          </div>
+        )}
+        {graded && entry.conf != null && (
+          <div className="thermal-item">
+            <span>Confidence</span>
+            <span className="mono">{entry.conf}%</span>
+          </div>
+        )}
+        <div className="thermal-item">
+          <span>Grade</span>
+          <span className="mono">
+            {graded
+              ? entry.grade === "Reject"
+                ? "Reject"
+                : "Grade " + entry.grade
+              : "Not graded (under 10kg)"}
+          </span>
+        </div>
+      </div>
+
+      <div className="thermal-line" />
+
+      <div className="thermal-total-row">
+        <span>TOTAL AMOUNT</span>
+        <span className="mono">{peso(total)}</span>
+      </div>
+
+      <div className="thermal-line" />
+
+      <div className="thermal-thanks">THANK YOU</div>
+      <ReceiptBarcode />
+      <div className="thermal-tear" />
+    </div>
+  );
+}
+
 function Receipt({
   go,
   entry,
@@ -843,71 +1186,104 @@ function Receipt({
   go: (s: ScreenId) => void;
   entry: Session;
 }) {
-  const graded = entry.grade != null;
-  const rows: [string, string][] = [
-    ["Species", entry.species + " tuna"],
-    ["Weight", entry.weight.toFixed(2) + " kg"],
-  ];
-  if (graded && entry.price != null) {
-    rows.push(["Confidence", entry.conf != null ? entry.conf + "%" : "Manual"]);
-    rows.push(["Grade", entry.grade!]);
-    rows.push(["Unit price", peso(entry.price) + "/kg"]);
-    rows.push(["Est. value", peso(entry.price * entry.weight)]);
-  } else {
-    rows.push(["Grade", "Not graded (under 10kg)"]);
-  }
-  rows.push(["Saved", entry.time]);
+  const [fullscreen, setFullscreen] = useState(false);
+  const receiptNo = useMemo(
+    () => "TN-" + Math.random().toString(36).slice(2, 8).toUpperCase(),
+    [entry.time, entry.species, entry.weight],
+  );
+  const recordedAt = new Date().toLocaleString("en-PH", {
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: true,
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+  });
 
   return (
-    <div className="screen active">
-      <TopBar title="Sample saved" onBack={() => go("history")} />
-      <div className="screen-scroll">
-        <div className="split-row">
-          <div
-            className="split-col-a"
-            style={{
-              alignItems: "center",
-              justifyContent: "center",
-              textAlign: "center",
-              gap: 10,
-            }}
-          >
-            <div className="check-ring">
-              <svg width="26" height="26" viewBox="0 0 24 24" fill="none">
-                <path
-                  d="M5 12.5l4.5 4.5L19 7"
-                  stroke="currentColor"
-                  strokeWidth="2.2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
+    <div className="screen active receipt-screen">
+      <TopBar title="Print receipt" onBack={() => go("history")} />
+      <div className="receipt-layout">
+        <div className="receipt-success-col">
+          <div className="receipt-success-body">
+            <div className="receipt-success-icon" aria-hidden>
+              <svg width="64" height="64" viewBox="0 0 56 56" fill="none">
+                <rect x="8" y="6" width="32" height="42" rx="4" stroke="#3b82f6" strokeWidth="2" fill="#eff6ff" />
+                <rect x="14" y="2" width="32" height="42" rx="4" stroke="#93c5fd" strokeWidth="1.5" fill="#f8fafc" />
+                <rect x="20" y="10" width="28" height="36" rx="3" fill="#fff" stroke="#3b82f6" strokeWidth="2" />
+                <circle cx="34" cy="26" r="10" fill="#22c55e" />
+                <path d="M29 26l3.5 3.5L39 22" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
               </svg>
             </div>
-            <h2 className="display">Saved to history</h2>
-            <p className="sub">
-              Sample record has been stored on this tablet
+            <h2 className="receipt-success-title display">Success!</h2>
+            <p className="receipt-success-sub">
+              Sample record has been stored on this tablet and is ready to print.
             </p>
+            <button type="button" className="receipt-download-btn">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden>
+                <path d="M12 3v12M7 10l5 5 5-5M5 21h14" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+              Download PDF Receipt
+            </button>
           </div>
-          <div className="split-col-b" style={{ justifyContent: "center" }}>
-            <div className="receipt">
-              {rows.map(([k, v]) => (
-                <div className="r-row" key={k}>
-                  <span>{k}</span>
-                  <span>{v}</span>
-                </div>
-              ))}
-            </div>
-            <div className="btn-row">
-              <button className="btn btn-ghost" onClick={() => go("history")}>
-                View history
-              </button>
-              <button className="btn btn-primary" onClick={() => go("scan")}>
-                New scan
-              </button>
-            </div>
+          <div className="btn-row receipt-actions">
+            <button className="btn btn-ghost" onClick={() => go("history")}>
+              View history
+            </button>
+            <button className="btn btn-primary" onClick={() => go("scan")}>
+              New scan
+            </button>
+          </div>
+        </div>
+
+        <div className="receipt-paper-col">
+          <button
+            type="button"
+            className="receipt-fullscreen-btn"
+            onClick={() => setFullscreen(true)}
+            aria-label="View receipt full screen"
+          >
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden>
+              <path d="M8 3H5a2 2 0 0 0-2 2v3M21 8V5a2 2 0 0 0-2-2h-3M3 16v3a2 2 0 0 0 2 2h3M16 21h3a2 2 0 0 0 2-2v-3" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+            Full screen
+          </button>
+          <div className="receipt-dispenser receipt-dispenser-fit">
+            <div className="receipt-slot" />
+            <ThermalPaper
+              entry={entry}
+              receiptNo={receiptNo}
+              recordedAt={recordedAt}
+              compact
+            />
           </div>
         </div>
       </div>
+
+      {fullscreen && (
+        <div className="receipt-fullscreen-overlay" role="dialog" aria-modal="true">
+          <button
+            type="button"
+            className="receipt-fullscreen-close"
+            onClick={() => setFullscreen(false)}
+            aria-label="Close full screen"
+          >
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+              <path d="M18 6L6 18M6 6l12 12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+            </svg>
+          </button>
+          <div className="receipt-fullscreen-inner">
+            <div className="receipt-dispenser receipt-dispenser-lg">
+              <div className="receipt-slot" />
+              <ThermalPaper
+                entry={entry}
+                receiptNo={receiptNo}
+                recordedAt={recordedAt}
+              />
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
